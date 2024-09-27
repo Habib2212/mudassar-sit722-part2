@@ -1,1 +1,49 @@
-# Write Kubernetes Deployment Script
+apiVersion: apps/v1  # Specifies the API version for the Deployment object.
+kind: Deployment  # Declares that this is a Deployment object, which manages application replicas.
+
+metadata:
+  name: book-catalog-deployment  # The name of the Deployment.
+  labels:  # Labels are key-value pairs used to identify and organize Kubernetes objects.
+    app: book-catalog  # The "app" label with the value "book-catalog" used to identify this Deployment.
+
+spec:
+  replicas: 3  # Defines how many instances (pods) of the application will be created and maintained.
+
+  selector:
+    matchLabels:
+      app: book-catalog  # The selector tells Kubernetes which pods this Deployment should manage based on matching labels.
+
+  template:  # The pod template that defines what each pod managed by this Deployment should look like.
+    metadata:
+      labels:
+        app: book-catalog  # This label ensures that the pods created by this Deployment have the correct label to match the selector.
+
+    spec:  # Specification for the pod itself.
+      containers:  # Defines the containers that will run within each pod.
+      - name: book-catalog  # The name of the container (this can be anything meaningful).
+        image: mudassar984/book-catalog:latest  # The Docker image to be used in this container (from Docker Hub or another registry).
+        ports:  # This section exposes container ports to the pod network.
+        - containerPort: 8000  # The port inside the container that the application listens to. This should match the app's configuration.
+
+        env:  # Specifies environment variables for the container.
+        - name: DATABASE_URL  # The name of the environment variable that the application uses to connect to the database.
+          value: "postgresql://mudassar_sit722_part_user:fXudEv1EuvSaeygLXfSSWCkjJ1NS4yr9@dpg-crr7pfqj1k6c73eb03t0-a.oregon-postgres.render.com/mudassar_sit722_part"  # The actual connection string for the PostgreSQL database.
+
+---
+
+apiVersion: v1  # The API version for the Service object (services use a different version than deployments).
+kind: Service  # Declares that this object is a Service, which exposes the application to the network.
+
+metadata:
+  name: book-catalog-service  # The name of the Service object.
+
+spec:
+  selector:
+    app: book-catalog  # The Service will route traffic to pods with this label (app: book-catalog).
+
+  ports:
+  - protocol: TCP  # The network protocol used (in this case, TCP).
+    port: 80  # The port on which the service is exposed to external users (e.g., the browser or client).
+    targetPort: 8000  # The port on the container where traffic should be routed (matches the containerPort inside the pod).
+
+  type: LoadBalancer  # This Service type creates an external load balancer to expose the service to the internet.
